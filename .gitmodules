@@ -1,0 +1,6 @@
+[submodule "tkWindget"]
+	path = tkWindget
+	url = https://github.com/Killberos-Tze/tkWindget.git
+[submodule "RW_data"]
+	path = RW_data
+	url = https://github.com/Killberos-Tze/RW_data.git
