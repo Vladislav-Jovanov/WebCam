@@ -1,5 +1,5 @@
 .instruments
 **/*.ini
 **/*.txt
-*.svg
+#*.svg
 **/*.png
