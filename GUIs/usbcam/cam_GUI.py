@@ -7,11 +7,10 @@ Created on Tue Nov  1 16:02:13 2022
 """
 import numpy as np
 from RW_data.RW_files import Files_RW
-from matplotlib.figure import Figure
 import tkinter as tk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from figures.capture import FigureCAM
 from PIL import Image, ImageTk
-from tkWindget.tkWindget import Rotate, OnOffButton, AppFrame
+from tkWindget.tkWindget import Rotate, OnOffButton, AppFrame, FigureFrame
 import cv2
 import os
 from tkinter.filedialog import asksaveasfilename
@@ -19,95 +18,10 @@ from tkinter.filedialog import asksaveasfilename
 class container():
     pass
 
-#does the same as function block_class its nice exercise
-"""
-class block_frame_class(tk.Frame):
-    def __init__(self,**kwargs):
-        if 'parent' not in kwargs:
-            parent=None
-        else:
-            parent=kwargs['parent']
-        if 'row' not in kwargs:
-            row=1
-        else:
-            row=kwargs['row']
-        if 'column' not in kwargs:
-            column=1
-        else:
-            column=kwargs['column']
-        if 'rowspan' not in kwargs:
-            rowspan=1
-        else:
-            rowspan=kwargs['rowspan']
-        if 'columnspan' not in kwargs:
-            columnspan=1
-        else:
-            columnspan=kwargs['columnspan']
-        super().__init__(parent)
-        super().grid(column=column,row=row,columnspan=columnspan,rowspan=rowspan)
-        super().columnconfigure(0, weight = 1)
-        super().rowconfigure(0, weight = 1)
-"""      
-"""        
-    def block_frame(self,**kwargs):
-        if 'parent' not in kwargs:
-            parent=None
-        else:
-            parent=kwargs['parent']
-        if 'row' not in kwargs:
-            row=1
-        else:
-            row=kwargs['row']
-        if 'column' not in kwargs:
-            column=1
-        else:
-            column=kwargs['column']
-        if 'rowspan' not in kwargs:
-            rowspan=1
-        else:
-            rowspan=kwargs['rowspan']
-        if 'columnspan' not in kwargs:
-            columnspan=1
-        else:
-            columnspan=kwargs['columnspan']
-        tmp=tk.Frame(parent)
-        tmp.grid(column=column,row=row,columnspan=columnspan,rowspan=rowspan)
-        tmp.columnconfigure(0, weight = 1)
-        tmp.rowconfigure(0, weight = 1)
-        return tmp
-"""
-
-    
-
-#not needed for now unless you add it to the side which is totally okay
-class FigureCAM(Figure):
-    def __init__(self,*args,**kwargs):
-        super().__init__()
-        #matplotlib multiplies axes size with large figure size 
-        figwidth=args[0]/(50*2.54)
-        figheight=args[1]/(50*2.54)
-        x0=0.1
-        y0=0.1
-        w=0.8
-        h=0.8
-        self.set_size_inches((figwidth,figheight))
-        self.my_ax=self.add_axes([x0,y0,w,h])
-        
-    def plot_data(self,axes,x,y):
-        axes.axhline(color='k',linewidth=1,y=0)
-        axes.axvline(color='k',linewidth=1,x=0)
-        axes.plot(x,y)
-        
-    def update_label(self, axes, label, string):
-        if label=='x_label':
-            axes.set_xlabel(string,fontsize=10, position=(0.5,0),labelpad=5)
-        elif label=='y_label':
-            axes.set_ylabel(string,fontsize=10, position=(0.5,0),labelpad=5)
-            
             
 class GUI_cam(AppFrame):
     def __init__(self,**kwargs):
-        super().__init__(**kwargs,appgeometry=(1300, 500, 25, 25))
+        super().__init__(**kwargs,appgeometry=(1300, 600, 25, 25))
         self.approot.title("UWC")
         self.find_cams()
         self.init_variables()
@@ -116,7 +30,12 @@ class GUI_cam(AppFrame):
         self.init_command_frame()
         if self.cam_list:
             self.init_cam(self.active_cam.choice.get())
-            self.init_figure_frame()
+            #self.figure.plot.set_size_inches((self.sizex/(180*2.54),self.sizey/(180*2.54)),forward=True)
+            #self.figure.plot.set_size_inches((1,1))
+            print(self.figure.plot)
+            self.figure.canvas.draw()
+            self.figure.grid(column=2,row=0)
+            
         try:
             tmp=Files_RW().check_IV_measure_ini(self.scriptdir,self.ini_name,self.split)
             self.savedir=tmp.savedir
@@ -161,8 +80,12 @@ class GUI_cam(AppFrame):
         self.image_frame=tk.Frame(self.frameroot)
         self.image_frame.grid(column=1,row=0)
         
-        self.figure_frame=tk.Frame(self.frameroot)
-        self.figure_frame.grid(column=2,row=0)
+        
+        self.figure=FigureFrame(parent=self.frameroot,figclass=FigureCAM)
+        self.figure.plot.set_size_inches((2,2),forward=True)
+        self.figure.plot.myaxes=self.figure.plot.add_axes([0.1,0.1,0.8,0.8])
+        self.figure.canvas.update()
+        #self.figure.grid(column=2,row=0)
 
         
     def placeholder(self,*args):
@@ -281,16 +204,6 @@ class GUI_cam(AppFrame):
         self.img_label=tk.Label(master=self.image_frame)
         self.img_label.grid(row=rowcount,column=1)
    
-    def init_figure_frame(self):
-        rowcount=1
-        self.plot=FigureCAM(self.sizex,self.sizey)
-        self.canvas=FigureCanvasTkAgg(self.plot,master=self.figure_frame)
-        self.canvas.get_tk_widget().grid(row=rowcount,column=1)
-        self.canvas.draw()
-        rowcount+=1
-        toolbar = NavigationToolbar2Tk(self.canvas, self.figure_frame, pack_toolbar=False)
-        toolbar.update()
-        toolbar.grid(row=rowcount,column=1)
         
     def plot_figure(self,frame):
         if len(self.plot.images)!=0:
