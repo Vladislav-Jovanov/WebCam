@@ -84,8 +84,8 @@ class GUI_cam(AppFrame):
         self.figure=FigureFrame(parent=self.frameroot,figclass=FigureCAM)
         self.figure.plot.set_size_inches((2,2),forward=True)
         self.figure.plot.myaxes=self.figure.plot.add_axes([0.1,0.1,0.8,0.8])
-        self.figure.canvas.update()
-        #self.figure.grid(column=2,row=0)
+        #self.figure.canvas.update()
+        self.figure.grid(column=2,row=0)
 
         
     def placeholder(self,*args):
