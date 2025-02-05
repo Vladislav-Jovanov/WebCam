@@ -14,9 +14,9 @@ class FigureCAM(Figure):
         y0=0.1
         w=0.8
         h=0.8
-        #self.set_size_inches((figwidth,figheight))
+        self.set_size_inches((figwidth,figheight))
         #self.set_size_inches((1,1))
-        #self.my_ax=self.add_axes([x0,y0,w,h])
+        self.my_ax=self.add_axes([x0,y0,w,h])
         
     def plot_data(self,axes,x,y):
         axes.axhline(color='k',linewidth=1,y=0)
