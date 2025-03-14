@@ -2,5 +2,5 @@
 **/*.ini
 **/*.txt
 #*.svg
-**/*.png
+#**/*.png
 **/__pycache__/
