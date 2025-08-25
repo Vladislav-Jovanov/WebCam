@@ -18,10 +18,13 @@ from tkinter.filedialog import asksaveasfilename
 class container():
     pass
 
-            
+         
+#to do take image frame should be destroyed and then remade depending on the resolution of the camera used
+
+    
 class GUI_cam(AppFrame):
     def __init__(self,**kwargs):
-        super().__init__(**kwargs,appgeometry=(1300, 600, 25, 25))
+        super().__init__(**kwargs,file=__file__,appgeometry=(1300, 600, 25, 25))
         self.approot.title("UWC")
         self.find_cams()
         self.init_variables()
@@ -29,7 +32,7 @@ class GUI_cam(AppFrame):
         self.init_image_frame()
         self.init_command_frame()
         if self.cam_list:
-            self.init_cam(self.active_cam.choice.get())
+            self.init_cam(self.active_cam.get_var())
             #self.figure.plot.set_size_inches((self.sizex/(180*2.54),self.sizey/(180*2.54)),forward=True)
             #self.figure.plot.set_size_inches((1,1))
             print(self.figure.plot)
@@ -168,7 +171,7 @@ class GUI_cam(AppFrame):
         self.init_cam(args[0])
     
     def start_live_cam(self):
-        cam=self.active_cam.choice.get()
+        cam=self.active_cam.get_var()
         self.capture = cv2.VideoCapture(cam)
         self.grab_frame()
         self.btn_list['cross'].enable_press()
@@ -186,7 +189,7 @@ class GUI_cam(AppFrame):
     def stop_live_cam(self):
         self.capture.release()
         self.remove_crosshair()
-        self.init_cam(self.active_cam.choice.get())
+        self.init_cam(self.active_cam.get_var())
         self.btn_list['cross'].change_state('off')
         self.btn_list['cross'].disable_press()
         self.btn_list['color'].change_state('off')
@@ -195,7 +198,7 @@ class GUI_cam(AppFrame):
     
     def take_image(self):
         if self.btn_list['cam'].get_state()=='on':
-            frame=self.read_out_cam(self.avg_num.choice.get())
+            frame=self.read_out_cam(self.avg_num.get_var())
             self.plot_figure(frame.astype('uint8'))
             self.canvas.draw()
     
