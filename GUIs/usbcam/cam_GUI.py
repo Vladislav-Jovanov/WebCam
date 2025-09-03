@@ -111,7 +111,7 @@ class GUI_cam(AppFrame):
             self.btn_list[item]=tmp
         self.btn_list['cam'].enable_press()
         rowcount+=1
-        self.avg_num=Rotate(parent=self.command_frame,direction='horizontal',width=5,choice_list=[1,15,25],typevar=tk.IntVar)
+        self.avg_num=Rotate(parent=self.command_frame,direction='horizontal',width=5,choice_list=[1,15,25],textvariable=tk.IntVar)
         self.avg_num.grid(column=1,row=rowcount,columnspan=2)
         
         rowcount+=1
