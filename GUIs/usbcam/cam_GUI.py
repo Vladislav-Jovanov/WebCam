@@ -8,19 +8,14 @@ Created on Tue Nov  1 16:02:13 2022
 import numpy as np
 from RW_data.RW_files import Write_to
 from tkinter import Label, Button, Frame, IntVar, StringVar
-from figures.capture import FigureCAM
+from Figures.Figures import FigureCAM
 from PIL import Image, ImageTk
 from tkWindget.tkWindget import Rotate, OnOffButton, AppFrame, FigureFrame, SaveSingleFile
 import cv2
 import os
 
-class container():
-    pass
-
-         
 #to do take image frame should be destroyed and then remade depending on the resolution of the camera used
 
-    
 class GUI_cam(AppFrame):
     def __init__(self,**kwargs):
         super().__init__(**kwargs,file=__file__,appgeometry=(1300, 600, 25, 25))
@@ -42,7 +37,7 @@ class GUI_cam(AppFrame):
             if capture.isOpened():
                 self.cam_list.append(f'/dev/{item}')
                 capture.release()
-        
+
     def init_cam(self,cam):
         self.capture=cv2.VideoCapture(cam)
         frame=self.read_out_cam()
@@ -51,8 +46,7 @@ class GUI_cam(AppFrame):
         self.remove_crosshair()
         self.plot_image(frame)
         self.init_figure_frame()
-        
-        
+
     def init_variables(self):
         self.split=':='
         self.scriptdir=os.path.dirname(__file__)#path of this __file__ not the __main__
@@ -61,7 +55,7 @@ class GUI_cam(AppFrame):
         self.command_list={'cam':{'on':self.start_live_cam,'off':self.stop_live_cam},'cross':{'on':self.add_crosshair,'off':self.remove_crosshair},'color':{'on':self.placeholder,'off':self.placeholder}}
         self._figure_init=False
         self.sample_name=StringVar()
-    
+
     def init_frames(self):    
         self.frameroot.pack(pady = (10,10), padx = (10,10))
         #for the buttons and file list
@@ -70,7 +64,7 @@ class GUI_cam(AppFrame):
         #for the figure
         self.image_frame=Frame(self.frameroot)
         self.image_frame.grid(column=1,row=0)
-        
+
     def init_figure_frame(self):
         if self._figure_init:
             self.figure.destroy()
@@ -78,11 +72,11 @@ class GUI_cam(AppFrame):
         self.figure=FigureFrame(parent=self.frameroot,figclass=FigureCAM,figkwargs={'figsize':(8/2.54,8*ratio/2.54),'axsize':[0.1,0.1,0.8,0.8]})
         self.figure.grid(column=2,row=0)
         self._figure_init=True
-        
+
     def placeholder(self,*args):
         if args:
             print(args[0])
-    
+
     def init_command_frame(self):
         rowcount=1
         self.active_cam=Rotate(parent=self.command_frame,direction='horizontal',width=12,choice_list=self.cam_list,command=self.change_cam)
@@ -101,7 +95,7 @@ class GUI_cam(AppFrame):
         rowcount+=1
         self.avg_num=Rotate(parent=self.command_frame,direction='horizontal',width=5,choice_list=[1,15,25],textvariable=IntVar)
         self.avg_num.grid(column=1,row=rowcount,columnspan=2)
-        
+
         rowcount+=1
         Button(self.command_frame, text="Record\nimage", command=self.take_image,width=10,bg='lightgray').grid(row=rowcount,column=1)
         #this should be SaveSingleFile button from tkWindget
@@ -112,14 +106,14 @@ class GUI_cam(AppFrame):
     def press_test(self,item):
         self.command_list[item][self.btn_list[item].get_state()]()
         #self.btn_list[item].change_state()
-    
+
     def grab_frame(self):
         if self.btn_list['cam'].get_state()=='on':
             frame=self.read_out_cam()
             self.plot_image(frame)
             #self.canvas.draw()
             self.image_frame.after(1,self.grab_frame)#check this one
-     
+
     def plot_image(self,frame):
         #here you need to adjust crosshair to the frame
         if self.sizez:
@@ -131,7 +125,7 @@ class GUI_cam(AppFrame):
         imgtk = ImageTk.PhotoImage(image=img)
         self.imgtk = imgtk
         self.img_label.configure(image=self.imgtk)
-        
+
     def read_out_cam(self,*args):
         ret, frame = self.capture.read()
         frame=frame.astype(int)
@@ -147,36 +141,36 @@ class GUI_cam(AppFrame):
         #    gray=frame
         elif self.btn_list['color'].get_state()=='off':
             gray = cv2.cvtColor(frame.astype('uint8'), cv2.COLOR_RGB2GRAY)
-            
+
         self.sizey,self.sizex,*tmp=np.shape(gray)
         if tmp:
             self.sizez=tmp[0]
         else:
             self.sizez=None
         return gray
-        
+
     def change_cam(self,*args):
         #self.pressmarker=[1,1]
         self.btn_list['cam'].change_state('off')
         self.stop_live_cam()
         self.init_cam(args[0])
-    
+
     def start_live_cam(self):
         cam=self.active_cam.get_var()
         self.capture = cv2.VideoCapture(cam)
         self.grab_frame()
         self.btn_list['cross'].enable_press()
         self.btn_list['color'].enable_press()
-        
+
     def remove_crosshair(self):
         self.crosshair=np.zeros((self.sizey,self.sizex)).astype('uint8')
-        
+
     def add_crosshair(self):
         self.crosshair[int(self.sizey/2)-1,:]=255
         self.crosshair[int(self.sizey/2),:]=255
         self.crosshair[:,int(self.sizex/2)-1]=255
         self.crosshair[:,int(self.sizex/2)]=255
-            
+
     def stop_live_cam(self):
         self.capture.release()
         self.remove_crosshair()
@@ -185,13 +179,15 @@ class GUI_cam(AppFrame):
         self.btn_list['cross'].disable_press()
         self.btn_list['color'].change_state('off')
         self.btn_list['color'].disable_press()
-        
-    
+
     def take_image(self):
         if self.btn_list['cam'].get_state()=='on':
             frame=self.read_out_cam(self.avg_num.get_var())
-            self.plot_figure(frame.astype('uint8'))
-            self.canvas.draw()
+            if self.sizez!=None:
+                self.figure.plot.plot_rgb_image(frame)
+            else:
+                self.figure.plot.plot_gray_image(frame)
+
     #you plot the cam image in this label
     def init_image_frame(self):
         rowcount=1
@@ -201,15 +197,6 @@ class GUI_cam(AppFrame):
     def save_data(self,filename):
         Write_to.data(filename,self.data)
 
-    def plot_figure(self,frame):
-        if len(self.plot.images)!=0:
-            self.test.set_data(frame)
-        else:
-            self.test=self.plot.my_ax.imshow(frame, cmap='gray', vmin=0, vmax=255)
-    
-    
-       
-        
 if __name__=='__main__':
     GUI_cam.init_start(GUI_cam())
         

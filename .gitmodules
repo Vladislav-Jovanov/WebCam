@@ -4,3 +4,6 @@
 [submodule "RW_data"]
 	path = RW_data
 	url = https://github.com/Killberos-Tze/RW_data.git
+[submodule "Figures"]
+	path = Figures
+	url = https://github.com/Killberos-Tze/Figures.git
