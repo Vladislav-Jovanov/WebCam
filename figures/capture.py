@@ -3,20 +3,11 @@
 from matplotlib.figure import Figure
 
 class FigureCAM(Figure):
-    def __init__(self,*args,**kwargs):
-        super().__init__()
+    def __init__(self,*args,figsize=(11/2.54,8/2.54),axsize=[2/11,2/11,7/11,5/8],**kwargs):
+        super().__init__(**kwargs)
         #matplotlib multiplies axes size with large figure size 
-        if not args:
-            args=[15.5,13]
-        figwidth=args[0]/(50*2.54)
-        figheight=args[1]/(50*2.54)
-        x0=0.1
-        y0=0.1
-        w=0.8
-        h=0.8
-        self.set_size_inches((figwidth,figheight))
-        #self.set_size_inches((1,1))
-        self.my_ax=self.add_axes([x0,y0,w,h])
+        self.set_size_inches(figsize)
+        self.my_ax=self.add_axes(axsize)
         
     def plot_data(self,axes,x,y):
         axes.axhline(color='k',linewidth=1,y=0)

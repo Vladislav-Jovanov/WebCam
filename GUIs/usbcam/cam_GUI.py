@@ -6,14 +6,13 @@ Created on Tue Nov  1 16:02:13 2022
 @author: tze
 """
 import numpy as np
-from RW_data.RW_files import Files_RW
-import tkinter as tk
+from RW_data.RW_files import Write_to
+from tkinter import Label, Button, Frame, IntVar, StringVar
 from figures.capture import FigureCAM
 from PIL import Image, ImageTk
-from tkWindget.tkWindget import Rotate, OnOffButton, AppFrame, FigureFrame
+from tkWindget.tkWindget import Rotate, OnOffButton, AppFrame, FigureFrame, SaveSingleFile
 import cv2
 import os
-from tkinter.filedialog import asksaveasfilename
 
 class container():
     pass
@@ -33,23 +32,7 @@ class GUI_cam(AppFrame):
         self.init_command_frame()
         if self.cam_list:
             self.init_cam(self.active_cam.get_var())
-            #self.figure.plot.set_size_inches((self.sizex/(180*2.54),self.sizey/(180*2.54)),forward=True)
-            #self.figure.plot.set_size_inches((1,1))
-            print(self.figure.plot)
-            self.figure.canvas.draw()
-            self.figure.grid(column=2,row=0)
-            
-        try:
-            tmp=Files_RW().check_IV_measure_ini(self.scriptdir,self.ini_name,self.split)
-            self.savedir=tmp.savedir
-        except:
-            self.savedir='Documents'
-            self.write_to_ini()
-    
-    def write_to_ini(self):
-        write=[]
-        write.append(f'save_file_path{self.split}{self.savedir}')
-        Files_RW().write_to_file(self.scriptdir,self.ini_name,write)
+
     #you need to google how to do this
     def find_cams(self):
         cams= [item.strip() for item in os.popen('ls /dev/ | grep video').readlines()]
@@ -67,6 +50,8 @@ class GUI_cam(AppFrame):
         #self.remove_crosshair(self.pressnames.index('cross'))
         self.remove_crosshair()
         self.plot_image(frame)
+        self.init_figure_frame()
+        
         
     def init_variables(self):
         self.split=':='
@@ -74,22 +59,25 @@ class GUI_cam(AppFrame):
         self.ini_name=os.path.basename(__file__).replace(os.path.basename(__file__).split('.')[-1],'ini')
         #self.pressnames=['cam','cross']
         self.command_list={'cam':{'on':self.start_live_cam,'off':self.stop_live_cam},'cross':{'on':self.add_crosshair,'off':self.remove_crosshair},'color':{'on':self.placeholder,'off':self.placeholder}}
+        self._figure_init=False
+        self.sample_name=StringVar()
+    
     def init_frames(self):    
         self.frameroot.pack(pady = (10,10), padx = (10,10))
         #for the buttons and file list
-        self.command_frame=tk.Frame(self.frameroot)
+        self.command_frame=Frame(self.frameroot)
         self.command_frame.grid(column=0,row=0,rowspan=3)
         #for the figure
-        self.image_frame=tk.Frame(self.frameroot)
+        self.image_frame=Frame(self.frameroot)
         self.image_frame.grid(column=1,row=0)
         
-        
-        self.figure=FigureFrame(parent=self.frameroot,figclass=FigureCAM)
-        self.figure.plot.set_size_inches((2,2),forward=True)
-        self.figure.plot.myaxes=self.figure.plot.add_axes([0.1,0.1,0.8,0.8])
-        #self.figure.canvas.update()
+    def init_figure_frame(self):
+        if self._figure_init:
+            self.figure.destroy()
+        ratio=self.sizey/self.sizex
+        self.figure=FigureFrame(parent=self.frameroot,figclass=FigureCAM,figkwargs={'figsize':(8/2.54,8*ratio/2.54),'axsize':[0.1,0.1,0.8,0.8]})
         self.figure.grid(column=2,row=0)
-
+        self._figure_init=True
         
     def placeholder(self,*args):
         if args:
@@ -100,7 +88,7 @@ class GUI_cam(AppFrame):
         self.active_cam=Rotate(parent=self.command_frame,direction='horizontal',width=12,choice_list=self.cam_list,command=self.change_cam)
         self.active_cam.grid(column=1,row=rowcount,columnspan=2)
         rowcount+=1
-        buttonframe=tk.Frame(self.command_frame)
+        buttonframe=Frame(self.command_frame)
         buttonframe.grid(column=1,row=rowcount,columnspan=2)
         self.btn_list={}
         #for idx,item in enumerate(self.pressnames):
@@ -111,12 +99,15 @@ class GUI_cam(AppFrame):
             self.btn_list[item]=tmp
         self.btn_list['cam'].enable_press()
         rowcount+=1
-        self.avg_num=Rotate(parent=self.command_frame,direction='horizontal',width=5,choice_list=[1,15,25],textvariable=tk.IntVar)
+        self.avg_num=Rotate(parent=self.command_frame,direction='horizontal',width=5,choice_list=[1,15,25],textvariable=IntVar)
         self.avg_num.grid(column=1,row=rowcount,columnspan=2)
         
         rowcount+=1
-        tk.Button(self.command_frame, text="Record\nimage", command=self.take_image,width=10,bg='lightgray').grid(row=rowcount,column=1)
-        tk.Button(self.command_frame, text="Save\ndata", command=self.placeholder,width=10,bg='lightgray').grid(row=rowcount,column=2)
+        Button(self.command_frame, text="Record\nimage", command=self.take_image,width=10,bg='lightgray').grid(row=rowcount,column=1)
+        #this should be SaveSingleFile button from tkWindget
+        self.save_button=SaveSingleFile(parent=self.command_frame,filevariable=self.sample_name,ini=self.ini, write_ini=self.write_ini, text='Save\ndata', filetypes=[('IHTM Matrix','*.mtx' )],write=self.save_data,datetime=True,width=10,bg='lightgray')
+        self.save_button.grid(row=rowcount,column=2)
+        #Button(self.command_frame, text="Save\ndata", command=self.placeholder,width=10,bg='lightgray').grid(row=rowcount,column=2)
 
     def press_test(self,item):
         self.command_list[item][self.btn_list[item].get_state()]()
@@ -201,13 +192,15 @@ class GUI_cam(AppFrame):
             frame=self.read_out_cam(self.avg_num.get_var())
             self.plot_figure(frame.astype('uint8'))
             self.canvas.draw()
-    
+    #you plot the cam image in this label
     def init_image_frame(self):
         rowcount=1
-        self.img_label=tk.Label(master=self.image_frame)
+        self.img_label=Label(master=self.image_frame)
         self.img_label.grid(row=rowcount,column=1)
-   
-        
+
+    def save_data(self,filename):
+        Write_to.data(filename,self.data)
+
     def plot_figure(self,frame):
         if len(self.plot.images)!=0:
             self.test.set_data(frame)
