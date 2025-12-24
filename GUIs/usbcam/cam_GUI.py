@@ -6,11 +6,11 @@ Created on Tue Nov  1 16:02:13 2022
 @author: tze
 """
 import numpy as np
-from RW_data.RW_files import Write_to
+from submodules.RW_files import Write_to
 from tkinter import Label, Button, Frame, IntVar, StringVar
-from Figures.Figures import FigureCAM
+from submodules.Figures import FigureCAM
 from PIL import Image, ImageTk
-from tkWindget.tkWindget import Rotate, OnOffButton, AppFrame, FigureFrame, SaveSingleFile
+from submodules.tkWindget import Rotate, OnOffButton, AppFrame, FigureFrame, SaveSingleFile
 import cv2
 import os
 

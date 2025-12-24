@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#from AppHub.Hub import MultipleApps
+#from submodules.Hub import MultipleApps
 
 from GUIs.usbcam.cam_GUI import GUI_cam
 
